@@ -49,11 +49,11 @@ function renderLink(l) {
     el("div", { className: "meta" }, meta),
   );
   const badge = el("span", { className: "badge" }, `${l.clicks} click${l.clicks === 1 ? "" : "s"}`);
-  const copyBtn = el("button", { className: "secondary", type: "button", onclick: () => copy(l.shortUrl) }, "Copy");
+  const copyBtn = el("button", { className: "ghost", type: "button", onclick: () => copy(l.shortUrl) }, "Copy");
   const delBtn = el(
     "button",
     {
-      className: "secondary danger",
+      className: "ghost danger",
       type: "button",
       onclick: async () => {
         if (!confirm(`Delete ${l.shortUrl}?`)) return;
