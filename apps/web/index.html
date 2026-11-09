@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shortly - URL shortener</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236366f1'/%3E%3Cpath d='M10 17l5-5m-1 8l4-4m-5 3l-2 2a3 3 0 01-4-4l2-2m8-2l2-2a3 3 0 014 4l-2 2' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <div class="logo">&#128279;</div>
+      <h1>Shortly</h1>
+      <p>Paste a long link, get a short one you can share anywhere.</p>
+    </header>
+
+    <form id="form" class="card form" autocomplete="off">
+      <label class="field">
+        <span>Destination URL</span>
+        <input id="url" type="url" placeholder="https://example.com/a/very/long/link" required>
+      </label>
+      <label class="field">
+        <span>Custom alias <em>(optional)</em></span>
+        <div class="alias-input">
+          <span class="prefix" id="prefix"></span>
+          <input id="alias" type="text" placeholder="my-link" pattern="[A-Za-z0-9_\-]{3,32}" title="3-32 letters, digits, _ or -">
+        </div>
+      </label>
+      <button id="submit" type="submit">Shorten link</button>
+      <p id="error" class="error" role="alert" hidden></p>
+    </form>
+
+    <section id="result" class="card result" hidden>
+      <span class="label">Your short link</span>
+      <div class="result-row">
+        <a id="result-link" target="_blank" rel="noopener"></a>
+        <button id="copy-result" class="secondary" type="button">Copy</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><strong id="total-links">0</strong><span>Links</span></div>
+      <div class="stat"><strong id="total-clicks">0</strong><span>Total clicks</span></div>
+    </section>
+
+    <section class="card">
+      <h2>Your links</h2>
+      <ul id="list" class="list"></ul>
+      <p id="empty" class="empty">No links yet. Create your first one above.</p>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

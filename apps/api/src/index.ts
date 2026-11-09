@@ -1,38 +1,35 @@
 import express from "express";
 import { randomBytes } from "node:crypto";
+import { fileURLToPath } from "node:url";
+import { LinkStore, type LinkRecord } from "./store.ts";
 
-const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
-const BASE_URL = process.env.BASE_URL ?? `http://localhost:${PORT}`;
+const BASE_URL = (process.env.BASE_URL ?? `http://localhost:${PORT}`).replace(/\/$/, "");
+const DATA_FILE =
+  process.env.DATA_FILE ?? fileURLToPath(new URL("../data/links.json", import.meta.url));
+const WEB_DIR = fileURLToPath(new URL("../../web", import.meta.url));
 
-interface LinkRecord {
-  code: string;
-  url: string;
-  clicks: number;
-  createdAt: string;
-}
-
-// In-memory store (resets on restart). Swap for packages/db later.
-const links = new Map<string, LinkRecord>();
+const store = new LinkStore(DATA_FILE);
+const app = express();
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const CODE_RE = /^[A-Za-z0-9_-]{3,32}$/;
+const RESERVED = new Set(["api", "health", "index", "app", "styles", "favicon"]);
 
 function generateCode(length = 7): string {
-  const bytes = randomBytes(length);
   let code = "";
-  for (const b of bytes) code += ALPHABET[b % ALPHABET.length];
+  for (const b of randomBytes(length)) code += ALPHABET[b % ALPHABET.length];
   return code;
 }
 
 function uniqueCode(): string {
   let code = generateCode();
-  while (links.has(code)) code = generateCode();
+  while (store.has(code) || RESERVED.has(code)) code = generateCode();
   return code;
 }
 
 function isValidUrl(value: unknown): value is string {
-  if (typeof value !== "string") return false;
+  if (typeof value !== "string" || value.length > 2048) return false;
   try {
     const u = new URL(value);
     return u.protocol === "http:" || u.protocol === "https:";
@@ -41,29 +38,38 @@ function isValidUrl(value: unknown): value is string {
   }
 }
 
-app.use(express.json());
+const view = (r: LinkRecord) => ({ ...r, shortUrl: `${BASE_URL}/${r.code}` });
+
+app.use(express.json({ limit: "10kb" }));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// Create a short link. Body: { url, alias? }
+app.get("/api/links", (_req, res) => {
+  const links = store.list();
+  res.json({
+    links: links.map(view),
+    totals: { links: links.length, clicks: links.reduce((n, l) => n + l.clicks, 0) },
+  });
+});
+
 app.post("/api/links", (req, res) => {
   const { url, alias } = (req.body ?? {}) as { url?: unknown; alias?: unknown };
 
   if (!isValidUrl(url)) {
-    res.status(400).json({ error: "A valid http(s) `url` is required" });
+    res.status(400).json({ error: "Enter a valid http(s) URL" });
     return;
   }
 
   let code: string;
-  if (alias !== undefined) {
+  if (alias !== undefined && alias !== "") {
     if (typeof alias !== "string" || !CODE_RE.test(alias)) {
-      res.status(400).json({ error: "`alias` must be 3-32 chars: letters, digits, _ or -" });
+      res.status(400).json({ error: "Alias must be 3-32 characters: letters, digits, _ or -" });
       return;
     }
-    if (links.has(alias)) {
-      res.status(409).json({ error: "Alias already in use" });
+    if (RESERVED.has(alias.toLowerCase()) || store.has(alias)) {
+      res.status(409).json({ error: "That alias is already taken" });
       return;
     }
     code = alias;
@@ -71,41 +77,45 @@ app.post("/api/links", (req, res) => {
     code = uniqueCode();
   }
 
-  const record: LinkRecord = { code, url, clicks: 0, createdAt: new Date().toISOString() };
-  links.set(code, record);
-  res.status(201).json({ ...record, shortUrl: `${BASE_URL}/${code}` });
+  res.status(201).json(view(store.create(code, url)));
 });
 
-// Link stats
 app.get("/api/links/:code", (req, res) => {
-  const record = links.get(req.params.code);
+  const record = store.get(req.params.code);
   if (!record) {
     res.status(404).json({ error: "Link not found" });
     return;
   }
-  res.json({ ...record, shortUrl: `${BASE_URL}/${record.code}` });
+  res.json(view(record));
 });
 
-// Delete a link
 app.delete("/api/links/:code", (req, res) => {
-  if (!links.delete(req.params.code)) {
+  if (!store.delete(req.params.code)) {
     res.status(404).json({ error: "Link not found" });
     return;
   }
   res.status(204).end();
 });
 
-// Redirect
+// Web UI (static). Registered before /:code so assets resolve first.
+app.use(express.static(WEB_DIR));
+
 app.get("/:code", (req, res) => {
-  const record = links.get(req.params.code);
+  const record = store.click(req.params.code);
   if (!record) {
-    res.status(404).json({ error: "Link not found" });
+    res.status(404).type("text/plain").send("Link not found");
     return;
   }
-  record.clicks += 1;
   res.redirect(302, record.url);
 });
 
-app.listen(PORT, () => {
-  console.log(`Shortly API listening on ${BASE_URL}`);
+const server = app.listen(PORT, () => {
+  console.log(`Shortly running at ${BASE_URL}`);
 });
+
+function shutdown() {
+  store.flush();
+  server.close(() => process.exit(0));
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

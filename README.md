@@ -7,19 +7,19 @@ A simple URL shortener built with Node.js, Express 5 and TypeScript, organised a
 ```
 apps/
   api/        Express REST API + redirect service
-  web/        Frontend (placeholder)
+  web/        Static web UI (HTML/CSS/JS), served by the API
 packages/
-  db/         Database layer (placeholder)
+  db/         Reserved for a future database layer
   types/      Shared types (placeholder)
 ```
 
 ## Getting started
 
-Requirements: Node.js 20+ and npm.
+Requirements: Node.js 22.6+ and npm. Open http://localhost:4000 for the web UI.
 
 ```bash
 npm install
-npm run dev        # starts the API with hot reload on http://localhost:4000
+npm run dev        # API + web UI with hot reload on http://localhost:4000
 ```
 
 ### Configuration
@@ -28,6 +28,7 @@ npm run dev        # starts the API with hot reload on http://localhost:4000
 | ---------- | ------------------------ | ------------------------------------ |
 | `PORT`     | `4000`                   | Port the API listens on              |
 | `BASE_URL` | `http://localhost:$PORT` | Public base URL used in `shortUrl`   |
+| `DATA_FILE`| `apps/api/data/links.json` | Where links are persisted          |
 
 ## API
 
@@ -55,6 +56,9 @@ Errors: `400` invalid URL/alias, `409` alias taken.
 ### `GET /:code`
 Redirects (`302`) to the original URL and increments the click counter. `404` if unknown.
 
+### `GET /api/links`
+Lists all links (newest first) with totals: `{ links, totals: { links, clicks } }`.
+
 ### `GET /api/links/:code`
 Returns link details and click count.
 
@@ -66,7 +70,8 @@ Health check.
 
 ## Notes
 
-- Links are currently stored **in memory** and are lost on restart. `packages/db` is reserved for a persistent store.
+- Links persist to a JSON file (`apps/api/data/links.json`, git-ignored). Fine for a single instance; use a real database for scale.
+- The UI supports custom aliases, copy-to-clipboard, click stats, deleting links, and light/dark mode.
 - Only `http` and `https` URLs are accepted.
 
 ## License
