@@ -3,82 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shortly - Shorten, share, track</title>
-  <meta name="description" content="Turn long URLs into short, memorable links and see how many people click them.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M12 20l8-8M13.5 11.5l1-1a3.5 3.5 0 015 5l-1 1M18.5 20.5l-1 1a3.5 3.5 0 01-5-5l1-1' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>Shortly - Snip your links</title>
+  <meta name="description" content="Snip long URLs down to size, pick your own alias, and keep count of every click.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff4a1c'/%3E%3Cpath d='M7 22l18-12' stroke='%2316130f' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="grid"></span></div>
-
-  <header class="nav">
-    <a class="brand" href="/" aria-label="Shortly home">
-      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
-        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
-        <rect width="32" height="32" rx="9" fill="url(#lg)"/>
-        <path d="M12 20l8-8M13.5 11.5l1-1a3.5 3.5 0 015 5l-1 1M18.5 20.5l-1 1a3.5 3.5 0 01-5-5l1-1" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
-      </svg>
-      <span>shortly</span>
-    </a>
-    <div class="live"><i></i> Live &middot; <b id="total-links">0</b> links &middot; <b id="total-clicks">0</b> clicks</div>
+  <header class="bar wrap rise" style="--d:0ms">
+    <a class="logo" href="/">shortly<span>.</span></a>
+    <p class="tally"><b id="total-links">0</b> links <i>/</i> <b id="total-clicks">0</b> clicks</p>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <span class="eyebrow">URL shortener</span>
-      <h1>Long links, <span class="grad">made tiny.</span></h1>
-      <p>Shorten any URL in a click, pick your own alias, and watch the clicks roll in.</p>
+  <section class="hero wrap">
+    <p class="kicker rise" style="--d:80ms">&#9986; the url shortener</p>
+    <h1>
+      <span class="line rise" style="--d:140ms">Make <span class="long">long</span></span>
+      <span class="line rise" style="--d:240ms">links <span class="short">short</span>.</span>
+    </h1>
+    <p class="lede rise" style="--d:360ms">Paste a link, watch it get snipped, share the short one. Every click is counted.</p>
+  </section>
 
-      <div class="demo" aria-hidden="true">
-        <div class="demo-line long"><span class="tag">before</span><code id="demo-long"></code></div>
-        <div class="demo-arrow">&darr;</div>
-        <div class="demo-line short"><span class="tag">after</span><code id="demo-short"></code><em id="demo-saved"></em></div>
-      </div>
-    </section>
+  <div class="strips rise" style="--d:440ms" aria-hidden="true">
+    <div class="strip a"><div class="track" id="track-a"></div></div>
+    <div class="strip b"><div class="track" id="track-b"></div></div>
+  </div>
 
-    <form id="form" class="panel form" autocomplete="off">
+  <main class="wrap main">
+    <form id="form" class="box form rise" style="--d:520ms" autocomplete="off">
+      <label class="lbl" for="url">Long link</label>
       <div class="row">
-        <div class="input url">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>
-          <input id="url" type="url" placeholder="Paste your long URL here" aria-label="Destination URL" required>
-        </div>
-        <button id="submit" type="submit" class="primary">Shorten</button>
+        <input id="url" type="url" placeholder="https://paste-your-very-long-link-here.com/..." required>
+        <button id="submit" type="submit" class="go"><span>Snip it</span><b>&rarr;</b></button>
       </div>
-      <div class="input alias">
+      <label class="lbl" for="alias">Custom alias <em>optional</em></label>
+      <div class="alias">
         <span class="prefix" id="prefix"></span>
-        <input id="alias" type="text" placeholder="custom-alias (optional)" aria-label="Custom alias" pattern="[A-Za-z0-9_\-]{3,32}" title="3-32 letters, digits, _ or -">
+        <input id="alias" type="text" placeholder="my-link" pattern="[A-Za-z0-9_\-]{3,32}" title="3-32 letters, digits, _ or -">
       </div>
       <p id="error" class="error" role="alert" hidden></p>
     </form>
 
-    <section id="result" class="result" hidden>
-      <div class="result-top"><span class="check">&#10003;</span> Your link is ready</div>
-      <div class="result-row">
+    <section id="result" class="snip" hidden aria-live="polite">
+      <p class="snip-label" id="snip-label">Snipping...</p>
+      <div class="snip-line" id="snip-line">
+        <span id="snip-head"></span><span id="snip-tail"></span>
+        <svg id="snip-scissors" class="scissors" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+          <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+        </svg>
+      </div>
+      <div class="snip-final" id="snip-final" hidden>
         <a id="result-link" target="_blank" rel="noopener"></a>
-        <button id="copy-result" class="btn" type="button">Copy link</button>
+        <button id="copy-result" class="mini" type="button">Copy</button>
       </div>
     </section>
 
-    <section class="stats" aria-label="Overview">
-      <div class="stat"><span>Links created</span><strong id="stat-links">0</strong></div>
-      <div class="stat"><span>Total clicks</span><strong id="stat-clicks">0</strong></div>
-      <div class="stat"><span>Characters saved</span><strong id="stat-saved">0</strong></div>
+    <section class="figures rise" style="--d:600ms" aria-label="Overview">
+      <div><strong id="stat-links">0</strong><span>links snipped</span></div>
+      <div><strong id="stat-clicks">0</strong><span>total clicks</span></div>
+      <div><strong id="stat-saved">0</strong><span>characters saved</span></div>
     </section>
 
-    <section class="links">
-      <div class="links-head">
-        <h2>Your links</h2>
-        <div class="input search">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="search" type="search" placeholder="Search links" aria-label="Search links">
-        </div>
+    <section class="ledger">
+      <div class="ledger-head">
+        <h2>The ledger</h2>
+        <input id="search" type="search" placeholder="search..." aria-label="Search links">
       </div>
       <ul id="list" class="list"></ul>
       <p id="empty" class="empty"></p>
     </section>
   </main>
 
-  <footer class="footer">Shortly &middot; built with Express &amp; TypeScript</footer>
+  <footer class="foot wrap">shortly &mdash; express + typescript &mdash; made to be small</footer>
   <div id="toast" class="toast" role="status"></div>
   <script src="/app.js" type="module"></script>
 </body>
